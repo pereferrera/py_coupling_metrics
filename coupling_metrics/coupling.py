@@ -2,55 +2,18 @@ import os
 import ast
 import random
 import logging
-from dataclasses import dataclass
-from typing import Dict, List
+
+from coupling_metrics.metrics import CouplingMetrics
 
 
 logger = logging.getLogger(__name__)
 
-
-@dataclass
-class CouplingMetrics:
-
-    afferent_count: Dict[str, int]
-    efferent_count: Dict[str, int]
-
-    # Abstractness (A): The ratio of the number of abstract classes
-    # (and interfaces) in the analyzed
-    # package to the total number of classes in the analyzed package.
-    # The range for this metric is 0 to 1,
-    # with A=0 indicating a completely concrete package and A=1 indicating a
-    # completely abstract package.
-    abstractness: Dict[str, float]
-    instability: Dict[str, float]
-
-    # Distance from the main sequence (D): The perpendicular distance of a
-    # package from the idealized line A + I = 1. D is calculated
-    # as D = | A + I - 1 |.
-    # This metric is an indicator of the package's balance between
-    # abstractness and stability.
-    # A package squarely on the main sequence is optimally balanced with
-    # respect to its abstractness and stability. Ideal packages are either
-    # ompletely abstract and stable (I=0, A=1)
-    # or completely concrete and unstable (I=1, A=0).
-    # The range for this metric is 0 to 1,
-    # with D=0 indicating a package that is coincident with the main
-    # sequence and D=1 indicating a package that is as far from the main
-    # sequence as possible.
-    distance_to_main_seq: Dict[str, float]
-
-    uml_diagram: List[str]
-
-    @classmethod
-    def new(cls):
-        return CouplingMetrics(
-            afferent_count={},
-            efferent_count={},
-            abstractness={},
-            instability={},
-            distance_to_main_seq={},
-            uml_diagram=[]
-        )
+"""
+TODO: Allow for external libraries / submodules
+For example accept a "whitelist" of libraries that should be considered,
+with a defined level for each (for submodules we might want level 2,
+for third party libraries we might want level 1)
+"""
 
 
 def adjust_module_name_to_level(module: str, level: int):
@@ -126,6 +89,8 @@ def generate_metrics(project_root: str, package_name: str,
 
     afferent_set = {}
     efferent_set = {}
+    abstract_count = {}
+    concrete_count = {}
     uml_diagram_set = set()
 
     for root, _, files in os.walk(os.path.join(project_root, package_name),
@@ -178,10 +143,10 @@ def generate_metrics(project_root: str, package_name: str,
             efferent_set[module_name] =\
                 efferent_set.get(module_name, set()).union(dependencies)
 
-            if abstract + concrete > 0:
-                metrics.abstractness[module_name] = (
-                    abstract / (abstract + concrete)
-                )
+            abstract_count[module_name] =\
+                abstract_count.get(module_name, 0) + abstract
+            concrete_count[module_name] =\
+                concrete_count.get(module_name, 0) + concrete
 
     for from_, to_ in uml_diagram_set:
         arrow_direction = random.choice(['', 'up.', 'down.'])
@@ -192,6 +157,9 @@ def generate_metrics(project_root: str, package_name: str,
         metrics.efferent_count[module] = len(deps)
     for module, deps in afferent_set.items():
         metrics.afferent_count[module] = len(deps)
+    for module, count in abstract_count.items():
+        metrics.abstractness[module] = count / (
+            count + concrete_count.get(module_name, 0)) if count > 0 else 0.0
 
     metrics.uml_diagram.append("}")
     metrics.uml_diagram.append("@enduml")
