@@ -19,6 +19,30 @@ collapse into "my_package.foo".
 """
 
 
+def stable_dependencies_principle_warnings(coupling_metrics: CouplingMetrics):
+    """
+    See:
+    Martin, R. C. (2018). Clean Architecture:
+    a craftsman’s guide to software structure and design - Chapter 14
+
+    The instability metric of a component should be larger than the
+    instability metrics of the component that it depends on.
+    That is, the instability metrics should decrease in the direction
+    of dependency.
+
+    Also see:
+    https://www.entrofi.net/coupling-metrics-afferent-and-efferent-coupling
+    """
+    for module, deps in coupling_metrics.efferent_set.items():
+        instability = coupling_metrics.instability[module]
+        for dep in deps:
+            if coupling_metrics.instability[dep] > instability:
+                print(f"WARNING: {dep}'s instability of "
+                      f"{coupling_metrics.instability[dep]} "
+                      f"is bigger than {module}'s instability of "
+                      f"{instability}, from which it is a dependency.")
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--project_root",
@@ -34,9 +58,9 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    metrics = generate_metrics(project_root=args.project_root,
-                               package_name=args.package_name,
-                               level=args.level)
+    metrics: CouplingMetrics = generate_metrics(project_root=args.project_root,
+                                                package_name=args.package_name,
+                                                level=args.level)
 
     def print_sorted_metric(metrics: CouplingMetrics, metric_name: str):
         cumulative = 0
@@ -62,6 +86,8 @@ if __name__ == '__main__':
         print('------------------')
 
         print_sorted_metric(metrics, reported_metric[1])
+
+    stable_dependencies_principle_warnings(metrics)
 
     print('------------------')
     print('PlantUML diagram:')

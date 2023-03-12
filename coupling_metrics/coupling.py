@@ -186,4 +186,7 @@ def generate_metrics(project_root: str, package_name: str,
         for module in metrics.instability.keys()
     }
 
+    metrics.efferent_set = efferent_set
+    metrics.afferent_set = afferent_set
+
     return metrics

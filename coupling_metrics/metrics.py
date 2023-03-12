@@ -16,6 +16,9 @@ class CouplingMetrics:
     instability: Dict[str, float]
     distance_to_main_seq: Dict[str, float]
 
+    afferent_set: Dict[str, List[str]]
+    efferent_set: Dict[str, List[str]]
+
     uml_diagram: List[str]
 
     @classmethod
@@ -26,5 +29,7 @@ class CouplingMetrics:
             abstractness={},
             instability={},
             distance_to_main_seq={},
-            uml_diagram=[]
+            uml_diagram=[],
+            afferent_set={},
+            efferent_set={}
         )
