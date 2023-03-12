@@ -48,3 +48,8 @@ Some features that are still not implemented:
 * Allow analyzing references to packages outside of the considered namespace,
 with configurable levels for each such external package.
 * Draw a diagram of the position of each analyzed module in the main sequence line.
+
+## Coupling analysis
+
+See this [nice blog post](https://www.entrofi.net/coupling-metrics-afferent-and-efferent-coupling) for context.
+ This tool will print warnings whenever the instability of a dependency is bigger than that of its dependant.
